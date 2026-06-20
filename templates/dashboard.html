@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SmokeShield Dashboard</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">
+          <i class="fa-solid fa-shield-halved"></i>
+        </div>
+        <div>
+          <div class="brand-title">SmokeShield</div>
+          <div class="brand-subtitle">Monitoring Area Rokok</div>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a href="#dashboard" class="nav-item active"><i class="fa-solid fa-gauge-high"></i> Dashboard</a>
+        <a href="/camera" class="nav-item"><i class="fa-solid fa-video"></i> Live Camera</a>
+        <a href="#input-manual" class="nav-item"><i class="fa-solid fa-pen-to-square"></i> Input Manual</a>
+        <a href="#data" class="nav-item"><i class="fa-solid fa-table"></i> Data Deteksi</a>
+        <a href="#analisis" class="nav-item"><i class="fa-solid fa-chart-column"></i> Analisis</a>
+        <a href="#notifikasi" class="nav-item"><i class="fa-solid fa-bell"></i> Notifikasi</a>
+        <a href="#laporan" class="nav-item"><i class="fa-solid fa-file-lines"></i> Laporan</a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="footer-card">
+          <div class="label">Status Sistem</div>
+          <div class="value"><span class="dot"></span> Online</div>
+        </div>
+        <div class="footer-card">
+          <div class="label">Database</div>
+          <div class="value">smoking_violations.db</div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar" id="dashboard">
+        <div>
+          <div class="page-kicker">Sistem Monitoring Area Bebas Rokok</div>
+          <h1 class="page-title">Dashboard Pelanggaran Merokok</h1>
+          <p class="page-desc">
+            Live camera, grafik harian, tabel data, notifikasi, dan laporan otomatis dari database yang sama dengan modul deteksi.
+          </p>
+        </div>
+        <div class="topbar-actions">
+          <a href="/export/csv" class="btn btn-light btn-soft">
+            <i class="fa-solid fa-download me-2"></i>Export CSV
+          </a>
+          <button class="btn btn-dark btn-soft" id="refreshBtn">
+            <i class="fa-solid fa-rotate me-2"></i>Refresh
+          </button>
+        </div>
+      </header>
+
+      <section class="hero-card">
+        <div class="hero-left">
+          <div class="hero-pill">
+            <i class="fa-solid fa-circle-notch me-2"></i>
+            <span id="liveStatus">Memuat status...</span>
+          </div>
+          <div class="hero-metrics">
+            <div class="metric-box">
+              <div class="metric-label">Total Pelanggaran</div>
+              <div class="metric-value" id="mTotal">0</div>
+            </div>
+            <div class="metric-box">
+              <div class="metric-label">Pelanggaran Hari Ini</div>
+              <div class="metric-value" id="mToday">0</div>
+            </div>
+            <div class="metric-box">
+              <div class="metric-label">Minggu Ini</div>
+              <div class="metric-value" id="mWeek">0</div>
+            </div>
+            <div class="metric-box">
+              <div class="metric-label">Rata-rata / Hari</div>
+              <div class="metric-value" id="mAvg">0</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-right">
+          <div class="hero-card-panel">
+            <div class="panel-title">Ringkasan Cepat</div>
+            <div class="panel-line"><span>Jam puncak</span><strong id="mPeakHour">-</strong></div>
+            <div class="panel-line"><span>Hari puncak</span><strong id="mPeakDay">-</strong></div>
+            <div class="panel-line"><span>Confidence terakhir</span><strong id="mLatestConf">0.00</strong></div>
+            <div class="panel-line"><span>Update terakhir</span><strong id="mLatestTime">-</strong></div>
+          </div>
+        </div>
+      </section>
+
+      <!--
+      <section class="section-grid" id="monitoring">
+        <div class="section-card realtime-card">
+          <div class="section-head">
+            <div>
+              <div class="section-kicker">Monitoring Real-Time</div>
+              <h2>Live Camera CCTV Style</h2>
+            </div>
+            <span class="badge-soft success">Streaming aktif</span>
+          </div>
+
+          <div class="live-camera-wrap">
+            <img src="/video" alt="Live Camera" class="live-camera">
+          </div>
+        </div>
+      </section>
+      -->
+      <section class="section-grid" id="input-manual">
+  <div class="section-card">
+    <div class="section-head">
+      <div>
+        <div class="section-kicker">Input Manual</div>
+        <h2>Tindak Lanjut Pelanggaran</h2>
+      </div>
+    </div>
+
+    <form method="POST" action="/followup" enctype="multipart/form-data">
+      <div class="row g-3 mb-3">
+        <div class="col-md-2">
+          <input name="violation_id" class="form-control" placeholder="ID Pelanggaran" required>
+        </div>
+
+        <div class="col-md-3">
+          <input name="location" class="form-control" placeholder="Lokasi" required>
+        </div>
+
+        <div class="col-md-3">
+          <input name="reporter" class="form-control" placeholder="Nama Pelapor / Operator" required>
+        </div>
+
+        <div class="col-md-2">
+          <select name="status" class="form-control" required>
+            <option value="">Status</option>
+            <option>Baru</option>
+            <option>Sudah ditegur</option>
+            <option>Sudah diamankan</option>
+            <option>Selesai</option>
+          </select>
+        </div>
+
+        <div class="col-md-2">
+          <input type="file" name="evidence" class="form-control">
+        </div>
+      </div>
+
+      <div class="row g-3">
+        <div class="col-md-10">
+          <input name="note" class="form-control" placeholder="Catatan tindak lanjut" required>
+        </div>
+
+        <div class="col-md-2">
+          <button class="btn btn-primary w-100">Submit</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</section>
+
+      <section class="section-grid" id="data">
+        <div class="section-card table-card">
+          <div class="section-head">
+            <div>
+              <div class="section-kicker">Data Deteksi</div>
+              <h2>Tabel Pelanggaran</h2>
+            </div>
+            <div class="table-tools">
+              <input type="text" id="tableSearch" class="form-control form-control-sm search-box" placeholder="Cari data...">
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle custom-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Waktu</th>
+                  <th>Tanggal</th>
+                  <th>Lokasi</th>
+                  <th>Pelapor</th>
+                  <th>Status</th>
+                  <th>Confidence</th>
+                  <th>Catatan</th>
+                  <th>Source</th>
+                  <th>Bukti</th>
+                </tr>
+              </thead>
+              <tbody id="violationsTableBody">
+                <tr><td colspan="10" class="text-center py-4">Memuat data...</td></tr>
+              </tbody>
+        </table>
+        </div>
+        </div>
+    </section>
+      <section class="section-grid" id="analisis">
+        <div class="section-card chart-card">
+          <div class="section-head">
+            <div>
+              <div class="section-kicker">Analisis</div>
+              <h2>Grafik Pelanggaran Harian</h2>
+            </div>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="dailyChart"></canvas>
+          </div>
+        </div>
+
+        <div class="section-card chart-card">
+          <div class="section-head">
+            <div>
+              <div class="section-kicker">Analisis</div>
+              <h2>Grafik Per Jam</h2>
+            </div>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="hourlyChart"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <section class="section-grid" id="notifikasi">
+        <div class="section-card notification-card">
+          <div class="section-head">
+            <div>
+              <div class="section-kicker">Notifikasi</div>
+              <h2>Alert Terbaru</h2>
+            </div>
+          </div>
+          <div id="notificationList" class="notification-list"></div>
+        </div>
+
+        <div class="section-card report-card" id="laporan">
+          <div class="section-head">
+            <div>
+              <div class="section-kicker">Laporan</div>
+              <h2>Ringkasan Otomatis</h2>
+            </div>
+          </div>
+
+          <div class="report-box">
+            <h3 id="reportTitle">Memuat laporan...</h3>
+            <p id="reportBody">...</p>
+
+            <div class="report-grid">
+              <div class="report-mini">
+                <div class="mini-label">Confidence terakhir</div>
+                <div class="mini-value" id="reportConf">0.00</div>
+              </div>
+              <div class="report-mini">
+                <div class="mini-label">Puncak hari</div>
+                <div class="mini-value" id="reportPeakDay">-</div>
+              </div>
+              <div class="report-mini">
+                <div class="mini-label">Puncak jam</div>
+                <div class="mini-value" id="reportPeakHour">-</div>
+              </div>
+            </div>
+
+            <div class="report-note" id="reportRecommendation">...</div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="{{ url_for('static', filename='dashboard.js') }}"></script>
+</body>
+</html>
