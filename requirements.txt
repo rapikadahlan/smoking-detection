@@ -1,6 +1,6 @@
-Flask
-opencv-python-headless
-mediapipe
-ultralytics
-pygame
-numpy
+Flask==3.0.3
+numpy==1.26.4
+opencv-python-headless==4.10.0.84
+ultralytics==8.3.0
+pygame==2.6.0
+mediapipe==0.10.14
