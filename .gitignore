@@ -1,0 +1,10 @@
+venv/
+__pycache__/
+*.pyc
+
+smoking_violations.db
+
+static/evidence/*.jpg
+static/evidence/*.png
+
+runs/
